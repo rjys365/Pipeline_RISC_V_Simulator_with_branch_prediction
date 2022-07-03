@@ -291,7 +291,7 @@ bool instructionEx(const Command &cmd,const Register &reg,ExeResult &result,cons
             break;
         case CmdType::addi:
             if(cmd.rd==10&&cmd.rs1==0&&cmd.imm==255){
-                std::cout<<(int)((uint8_t)reg.read(10))<<std::endl;
+                std::cout<<(int)((uint8_t)reg.read(10));//<<std::endl;
                 return true;
             };
             result.wb=true;

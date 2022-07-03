@@ -8,7 +8,6 @@ using std::make_pair;
 
 struct Buffer1{
     std::pair<uint32_t,uint32_t> instruction=make_pair(0,0),ninstruction=make_pair(0,0);
-    
 public:
     void set(bool hold,uint32_t x,uint32_t pc){ninstruction=hold?instruction:make_pair(x,pc);}
     void step(){instruction=ninstruction;ninstruction=make_pair(0,0);}
@@ -46,6 +45,8 @@ class PipeLineComputer{
     PredictPC pc;
     Memory mem;
     Register reg;
+    uint64_t cycles=0;
+    uint64_t jalrTotalCnt=0,jalrCorrectCnt=0;
 public:
     PipeLineComputer(string fn=""){
         mem.load(fn);
@@ -114,6 +115,10 @@ public:
             cmdToEx.type==CmdType::beq||cmdToEx.type==CmdType::bge||cmdToEx.type==CmdType::bgeu||cmdToEx.type==CmdType::blt||cmdToEx.type==CmdType::bltu||cmdToEx.type==CmdType::bne,
             cmdToEx.type==CmdType::jal,cmdToEx.type==CmdType::jalr);
             b3.set(false,exers,pcToEx);
+            /*if(cmdToEx.type==CmdType::jalr&&clearBeforeEx)
+                std::cout<<"jalr predict error"<<std::endl;*/
+            if(cmdToEx.type==CmdType::jalr&&!clearBeforeEx)jalrCorrectCnt++;
+            if(cmdToEx.type==CmdType::jalr)jalrTotalCnt++;
             if(clearBeforeEx){
                 pc.set(pcnval);
                 //b1,b2 should be cleared during next step() 
@@ -156,8 +161,10 @@ public:
     }
     void run(){
         while(1){
+            cycles++;
             if(runACycle())break;
         }
+        //std::cout<<cycles<<"\t"<<jalrCorrectCnt<<"\t"<<jalrTotalCnt<<std::endl;
         //pd.printCorrectness();
     }
 };

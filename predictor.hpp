@@ -5,6 +5,8 @@
 #include<stack>
 #include<queue>
 #include<iostream>
+#define ENABLE_PREDICTION
+#define ENABLE_RAS
 class Predictor{
 private:
     enum class TwoBitState{N=0,NN=1,T=2,TT=3};
@@ -19,9 +21,15 @@ private:
     //uint32_t hispc[2]={0};
 public:
     std::pair<bool,uint32_t> get(int lastpc){
+#ifndef ENABLE_PREDICTION
+        return std::make_pair(false,0);
+#endif
         lastpc>>=2;
         
         if(jaljalr[lastpc]==2){//jalr
+#ifndef ENABLE_RAS
+            return std::make_pair(false,0);
+#endif
             if(retstk.empty())return std::make_pair(false,0);//unable to predict
             uint32_t ret=retstk.top();
             retstk_popval=ret;
@@ -40,6 +48,13 @@ public:
 
     }
     void feed(uint32_t frompc,uint32_t topc,bool isbn,bool isjal,bool isjalr){//true: jumped
+#ifndef ENABLE_PREDICTION
+        if(isbn){
+            totalCnt++;
+            if(topc==frompc+4)correctCnt++;
+        }
+        return;
+#endif
         //if(frompc==0x10a0)
         //    std::cout<<"AAAAAAAAAA!!!!!!!!"<<std::endl;
         if(!(isbn||isjal||isjalr))return;//not a branch, don't update
@@ -47,12 +62,15 @@ public:
         //frompc>>=2;
         if(isjal){
             //if(topc==this->topc[frompc])correctCnt++;
-            retstk.push(topc);
+            retstk.push(frompc+4);
             this->topc[kfrompc]=topc;
             jaljalr[kfrompc]=1;
             return;
         }
         if(isjalr){
+#ifndef ENABLE_RAS
+            return;
+#endif
             if(jaljalr[kfrompc]!=2&&!retstk.empty())retstk.pop();
             jaljalr[kfrompc]=2;
             return;
@@ -83,7 +101,7 @@ public:
         cmdPt[kfrompc]=(((cmdPt[kfrompc]<<1)|taken)&15);
     }
     void printCorrectness(){
-        std::cout<<"correctness:"<<(double)correctCnt/(double)totalCnt<<std::endl;
+        std::cout<<""<<(double)correctCnt/(double)totalCnt<<"\t"<<correctCnt<<"\t"<<totalCnt<<std::endl;
     }
 };
 
