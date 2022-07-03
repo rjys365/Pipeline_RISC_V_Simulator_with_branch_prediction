@@ -47,7 +47,7 @@ public:
         return std::make_pair(false,0);
 
     }
-    void feed(uint32_t frompc,uint32_t topc,bool isbn,bool isjal,bool isjalr){//true: jumped
+    void feed(uint32_t frompc,uint32_t topc,bool isbn,bool isjal,bool isjalr,bool nolink){//true: jumped
 #ifndef ENABLE_PREDICTION
         if(isbn){
             totalCnt++;
@@ -62,9 +62,9 @@ public:
         //frompc>>=2;
         if(isjal){
             //if(topc==this->topc[frompc])correctCnt++;
-            retstk.push(frompc+4);
-            this->topc[kfrompc]=topc;
             jaljalr[kfrompc]=1;
+            this->topc[kfrompc]=topc;
+            if(!nolink)retstk.push(frompc+4);
             return;
         }
         if(isjalr){

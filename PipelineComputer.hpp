@@ -113,7 +113,7 @@ public:
             clearBeforeEx=(cmdToEx.type!=CmdType::invalid&&pcnval!=pc.get(1));
             pd.feed(pcToEx,pcnval,
             cmdToEx.type==CmdType::beq||cmdToEx.type==CmdType::bge||cmdToEx.type==CmdType::bgeu||cmdToEx.type==CmdType::blt||cmdToEx.type==CmdType::bltu||cmdToEx.type==CmdType::bne,
-            cmdToEx.type==CmdType::jal,cmdToEx.type==CmdType::jalr);
+            cmdToEx.type==CmdType::jal,cmdToEx.type==CmdType::jalr,cmdToEx.rd==0);
             b3.set(false,exers,pcToEx);
             /*if(cmdToEx.type==CmdType::jalr&&clearBeforeEx)
                 std::cout<<"jalr predict error"<<std::endl;*/
