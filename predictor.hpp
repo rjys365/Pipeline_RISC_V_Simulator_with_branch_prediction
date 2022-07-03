@@ -9,7 +9,7 @@ class Predictor{
 private:
     enum class TwoBitState{N=0,NN=1,T=2,TT=3};
     static const int PRED_SIZE=65536*8/4;
-    TwoBitState cmdStates[PRED_SIZE][4]={(TwoBitState)0};
+    TwoBitState cmdStates[PRED_SIZE][16]={(TwoBitState)0};
     uint8_t cmdPt[PRED_SIZE]={0};
     uint8_t jaljalr[PRED_SIZE]={0};//1:jal 2:jalr
     uint32_t topc[PRED_SIZE]={0};
@@ -80,7 +80,7 @@ public:
                 st=taken?TwoBitState::TT:TwoBitState::T;
                 break;
         }
-        cmdPt[kfrompc]=(((cmdPt[kfrompc]<<1)|taken)&3);
+        cmdPt[kfrompc]=(((cmdPt[kfrompc]<<1)|taken)&15);
     }
     void printCorrectness(){
         std::cout<<"correctness:"<<(double)correctCnt/(double)totalCnt<<std::endl;
