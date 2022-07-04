@@ -5,17 +5,18 @@
 #include<stack>
 #include<queue>
 #include<iostream>
-#define ENABLE_PREDICTION
-#define ENABLE_RAS
+//#define ENABLE_PREDICTION
+//#define ENABLE_RAS
 class Predictor{
 private:
     enum class TwoBitState{N=0,NN=1,T=2,TT=3};
     static const int PRED_SIZE=65536*8/4;
+    static const size_t RAS_SIZE=8;
     TwoBitState cmdStates[PRED_SIZE][16]={(TwoBitState)0};
     uint8_t cmdPt[PRED_SIZE]={0};
     uint8_t jaljalr[PRED_SIZE]={0};//1:jal 2:jalr
     uint32_t topc[PRED_SIZE]={0};
-    std::stack<uint32_t>retstk;
+    std::deque<uint32_t>retstk;
     uint32_t retstk_popval=(uint32_t)(-1);
     uint32_t correctCnt=0,totalCnt=0;
     //uint32_t hispc[2]={0};
@@ -31,9 +32,9 @@ public:
             return std::make_pair(false,0);
 #endif
             if(retstk.empty())return std::make_pair(false,0);//unable to predict
-            uint32_t ret=retstk.top();
+            uint32_t ret=retstk.back();//top:back
             retstk_popval=ret;
-            retstk.pop();
+            retstk.pop_back();
             return std::make_pair(true,ret);
         }
         retstk_popval=(uint32_t)(-1);
@@ -64,14 +65,17 @@ public:
             //if(topc==this->topc[frompc])correctCnt++;
             jaljalr[kfrompc]=1;
             this->topc[kfrompc]=topc;
-            if(!nolink)retstk.push(frompc+4);
+            if(!nolink){
+                retstk.push_back(frompc+4);
+                while(retstk.size()>RAS_SIZE)retstk.pop_front();
+            }
             return;
         }
         if(isjalr){
 #ifndef ENABLE_RAS
             return;
 #endif
-            if(jaljalr[kfrompc]!=2&&!retstk.empty())retstk.pop();
+            if(jaljalr[kfrompc]!=2&&!retstk.empty())retstk.pop_back();
             jaljalr[kfrompc]=2;
             return;
         }
@@ -79,7 +83,8 @@ public:
         uint32_t ptopc=((int)cmdStates[kfrompc][cmdPt[kfrompc]]>1)?this->topc[kfrompc]:(frompc+4);
         if(topc==ptopc)correctCnt++;
         else{
-            if(retstk_popval!=(uint32_t)-1)retstk.push(retstk_popval);
+            if(retstk_popval!=(uint32_t)-1)retstk.push_back(retstk_popval);
+            while(retstk.size()>RAS_SIZE)retstk.pop_front();
         }
         bool taken=(topc!=frompc+4);
         if(taken)this->topc[kfrompc]=topc;
