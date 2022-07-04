@@ -5,8 +5,8 @@
 #include<stack>
 #include<queue>
 #include<iostream>
-//#define ENABLE_PREDICTION
-//#define ENABLE_RAS
+#define ENABLE_PREDICTION
+#define ENABLE_RAS
 class Predictor{
 private:
     enum class TwoBitState{N=0,NN=1,T=2,TT=3};
